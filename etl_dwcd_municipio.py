@@ -14,49 +14,44 @@ import sqlite3
 
 URL = "/content/drive/MyDrive/Projeto_Final_BI/"
 
-conn = sqlite3.connect(URL+"staging.db")
-cursor = conn.cursor()
-df = pd.read_sql_query("SELECT CD_MUNICIPIO, NM_MUNICIPIO, NM_MICRORREGIAO, CD_UF FROM STG_LOCALIDADE", conn)
+conn_extract = sqlite3.connect(URL+"staging.db")
+cursor = conn_extract.cursor()
+df = pd.read_sql_query("SELECT CD_MUNICIPIO, NM_MUNICIPIO, NM_MICRORREGIAO, CD_UF FROM STG_LOCALIDADE", conn_extract)
 df['CD_UF'] = df['CD_UF'].fillna(0).astype(int)
-conn.close()
-df
+conn_extract.close()
 
 conn = sqlite3.connect(URL+"dw_mortalidade.db")
 cursor = conn.cursor()
 df_uf = pd.read_sql_query("SELECT SK_UF, CD_UF FROM DWCD_UF", conn)
 conn.close()
-df_uf
 
 df = pd.merge(df, df_uf, on='CD_UF', how='left')
-df
 
 df.insert(0, 'SK_MUNICIPIO', range(1, len(df) + 1))
 df['SK_UF'] = df['SK_UF'].fillna(0).astype(int)
 df['DT_CARGA'] = datetime.now().date()
 df.drop(columns=['CD_UF'], inplace=True)
-df
 
-df.columns = ['SK_UF', 'SK_MUNICIPIO', 'CD_MUNICIPIO', 'NM_MUNICIPIO', 'NM_MICRORREGIAO', 'DT_CARGA']
-df
+df = df[['SK_UF', 'SK_MUNICIPIO', 'CD_MUNICIPIO', 'NM_MUNICIPIO', 'NM_MICRORREGIAO', 'DT_CARGA']]
 
-con = sqlite3.connect(URL+"dw_mortalidade.db")
-cur = con.cursor()
+conn = sqlite3.connect(URL+"dw_mortalidade.db")
+cur = conn.cursor()
+
+cur.execute("""DROP TABLE IF EXISTS DWCD_MUNICIPIO;""")
 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS DWCD_MUNICIPIO (
+    SK_UF INTEGER NOT NULL,
     SK_MUNICIPIO INTEGER PRIMARY KEY,
     CD_MUNICIPIO INTEGER NOT NULL,
     NM_MUNICIPIO TEXT,
     NM_MICRORREGIAO TEXT,
-    SK_UF INTEGER NOT NULL,
     DT_CARGA DATE,
     FOREIGN KEY (SK_UF) REFERENCES DWCD_UF(SK_UF)
 );
 """)
 
-con.commit()
-con.close()
-
-conn = sqlite3.connect(URL+"dw_mortalidade.db")
 df.to_sql('DWCD_MUNICIPIO', conn, if_exists='append', index=False)
+
+conn.commit()
 conn.close()

@@ -14,20 +14,20 @@ import sqlite3
 
 URL = "/content/drive/MyDrive/Projeto_Final_BI/"
 
-conn = sqlite3.connect(URL+"staging.db")
-cursor = conn.cursor()
-df_uf = pd.read_sql_query("SELECT CD_UF, NM_SIGLA_UF, NM_UF FROM STG_LOCALIDADE", conn)
+conn_extract = sqlite3.connect(URL+"staging.db")
+cursor = conn_extract.cursor()
+df_uf = pd.read_sql_query("SELECT CD_UF, NM_SIGLA_UF, NM_UF FROM STG_LOCALIDADE", conn_extract)
 df_uf = df_uf.drop_duplicates().dropna()
-conn.close()
-df_uf
+conn_extract.close()
 
 df_uf.insert(0, 'SK_UF', range(1, len(df_uf) + 1))
 df_uf['CD_UF'] = df_uf['CD_UF'].fillna(0).astype(int)
 df_uf['DT_CARGA'] = datetime.now().date()
-df_uf
 
-con = sqlite3.connect(URL+"dw_mortalidade.db")
-cur = con.cursor()
+conn = sqlite3.connect(URL+"dw_mortalidade.db")
+cur = conn.cursor()
+
+cur.execute("""DROP TABLE IF EXISTS DWCD_UF;""")
 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS DWCD_UF (
@@ -38,9 +38,9 @@ CREATE TABLE IF NOT EXISTS DWCD_UF (
     DT_CARGA DATE
 );
 """)
-con.commit()
-con.close()
 
 conn = sqlite3.connect(URL+"dw_mortalidade.db")
 df_uf.to_sql('DWCD_UF', conn, if_exists='append', index=False)
+
+conn.commit()
 conn.close()
