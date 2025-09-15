@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS DWCD_RACA (
     );
 """)
 
+
 df.to_sql("DWCD_RACA", conn, if_exists="append", index=False)
 conn.commit()
 conn.close()
