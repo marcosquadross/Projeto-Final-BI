@@ -15,6 +15,8 @@ URL = "/content/drive/MyDrive/Projeto_Final_BI/"
 
 conn = sqlite3.connect(URL+"dw_mortalidade.db")
 
+cur = conn.cursor()
+
 dict_sex = {
     0 : "Ignorado",
     2 : "Feminino",
@@ -29,7 +31,24 @@ df["DS_SEXO"] = dict_sex.values()
 
 df["DT_CARGA"] = datetime.now().date()
 
-df.to_sql("DWCD_SEXO", conn, if_exists="replace", index=False)
+cur.execute("""
+
+DROP TABLE IF EXISTS DWCD_SEXO;
+
+""")
+
+cur.execute("""
+CREATE TABLE DWCD_SEXO (
+    SK_SEXO INTEGER PRIMARY KEY,
+    CD_SEXO INTEGER NOT NULL,
+    DS_SEXO TEXT,
+    DT_CARGA DATE
+    );
+""")
+
+df.to_sql("DWCD_SEXO", conn, if_exists="append", index=False)
+
+conn.commit()
 
 conn.close()
 
