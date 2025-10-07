@@ -14,7 +14,7 @@ from datetime import datetime
 from google.colab import drive
 drive.mount('/content/drive')
 
-URL = "/content/drive/MyDrive/Projeto_Final_BI/"
+URL = "/content/drive/MyDrive/Projeto_Final_BI/DW/"
 
 conn = sqlite3.connect(URL+"dw_mortalidade.db")
 
