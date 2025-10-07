@@ -16,7 +16,7 @@ from datetime import datetime
 URL = "/content/drive/MyDrive/Projeto_Final_BI/"
 URL_STORE = URL+"DM/"
 
-conn_extract = sqlite3.connect(URL+"dw_mortalidade.db")
+conn_extract = sqlite3.connect(URL+"DW/dw_mortalidade.db")
 conn_store = sqlite3.connect(URL_STORE+"dm_mortalidade.db")
 
 cur_store = conn_store.cursor()
@@ -31,11 +31,13 @@ query = """
       SK_ASSISTMED,
       SK_GESTACIONAL,
       DT_OBITO
-    FROM DWMV_OBITO
+    FROM DWMV_OBITOS
 """
 
 df_obito = pd.read_sql(query, conn_extract)
 df_obito.head()
+
+df_obito
 
 df_obito['DT_OBITO'] = pd.to_datetime(df_obito['DT_OBITO'])
 df_obito["SK_TEMPO"] = df_obito["DT_OBITO"].dt.strftime("%Y%m")
@@ -44,7 +46,7 @@ df_obito['QT_OBITO'] = 1
 
 df_obito.rename(columns={'SK_MUNICIPIO': 'SK_LOCALIDADE'}, inplace=True)
 
-df_obito.columns
+df_obito
 
 df_obito = df_obito.groupby(['SK_PESSOA', 'SK_CAUSAOBITO', 'SK_LOCALIDADE', 'SK_ASSISTMED', 'SK_TEMPO', 'SK_GESTACIONAL'], as_index=False).agg(
     QT_OBITO = ('QT_OBITO', 'sum')
